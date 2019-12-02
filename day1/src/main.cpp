@@ -1,7 +1,6 @@
 #include <iostream>
 #include <vector>
-#include <string>
-#include <fstream>
+#include "util.hpp"
 
 int calcFuel(const int mass) 
 {
@@ -23,15 +22,10 @@ int main(int argc, char* argv[])
 
     printf("Calculating Day 1!\n");
 
-    std::vector<int>    input;
-    std::ifstream       file;
-    std::string         line;
-
-    file.open(argv[1]);
-    while (std::getline(file, line)) {
-        input.push_back(atoi(line.c_str()));
-    }
-    file.close();
+    const auto file = readFile(argv[1]);
+    std::vector<int> input;
+    for (const auto &l : file)
+        input.push_back(atoi(l.c_str()));
 
     int p1fuel = 0;
     int p2fuel = 0;
@@ -41,7 +35,5 @@ int main(int argc, char* argv[])
     }
     printf("Part 1: %d\n", p1fuel);
     printf("Part 2: %d\n", p2fuel);
-    printf("Press any key to close.\n");
-    std::cin.get();
     return 0;
 }

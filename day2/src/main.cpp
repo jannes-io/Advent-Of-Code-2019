@@ -1,42 +1,22 @@
 #include <iostream>
 #include <vector>
-#include <string>
-#include <fstream>
+#include "util.hpp"
 
-std::vector<int> parseProgram(std::string str)
+void runProgram(std::vector<int> &p)
 {
-    std::vector<int> program;
-
-    size_t pos(0);
-    while ((pos = str.find(',')) != std::string::npos) {
-        const auto token = str.substr(0, pos);
-        program.push_back(atoi(token.c_str()));
-        str.erase(0, pos + 1);
-    }
-    program.push_back(atoi(str.c_str()));
-
-    return program;
-}
-
-void runProgram(std::vector<int> &program)
-{
-    for (size_t i = 0; program[i] != 99; i += 4)
+    for (size_t i = 0; p[i] != 99; i += 4)
     {
-        switch (program[i]) {
-            case 1:
-                program[program[i + 3]] = program[program[i + 1]] + program[program[i + 2]];
-                break;
-            case 2:
-                program[program[i + 3]] = program[program[i + 1]] * program[program[i + 2]];
-                break;
+        switch (p[i]) {
+            case 1: p[p[i + 3]] = p[p[i + 1]] + p[p[i + 2]]; break;
+            case 2: p[p[i + 3]] = p[p[i + 1]] * p[p[i + 2]]; break;
             default: break;
-        }   
+        }
     }
 }
 
-std::pair<int, int> runUntilFound(std::vector<int> program, int desiredOutput)
+int runUntilFound(std::vector<int> program, int desiredOutput)
 {
-    for (size_t noun = 0; noun < 100; noun ++) {
+    for (size_t noun = 0; noun < 100; noun++) {
         for (size_t verb = 0; verb < 100; verb++) {
             auto newProgram = program;
             newProgram[1] = noun;
@@ -44,15 +24,17 @@ std::pair<int, int> runUntilFound(std::vector<int> program, int desiredOutput)
 
             runProgram(newProgram);
             if (newProgram[0] == desiredOutput) {
-                return {newProgram[1], newProgram[2]};
+                return 100 * newProgram[1] + newProgram[2];
             }
         }
     }
-    return {0, 0};
+    return 0;
 }
 
 void runPartOne(std::vector<int> program)
 {
+    program[1] = 12;
+    program[2] = 2;
     runProgram(program);
     printf("Part 1: %d\n", program[0]);
 }
@@ -60,7 +42,7 @@ void runPartOne(std::vector<int> program)
 void runPartTwo(std::vector<int> program)
 {
     const auto output = runUntilFound(program, 19690720);
-    printf("Part 2: %d\n", 100 * output.first + output.second);
+    printf("Part 2: %d\n", output);
 }
 
 int main(int argc, char* argv[])
@@ -71,20 +53,12 @@ int main(int argc, char* argv[])
     }
     printf("Calculating Day 2!\n");
 
-    std::ifstream   file;
-    std::string     line;
-
-    file.open(argv[1]);
-    std::getline(file, line);
-
-    auto program = parseProgram(line);
-    program[1] = 12;
-    program[2] = 2;
+    const auto file = readFile(argv[1]);
+    std::vector<int> program;
+    for (const auto &el : split(file.front(), ","))
+        program.push_back(atoi(el.c_str()));
 
     runPartOne(program);
     runPartTwo(program);
-
-    printf("Press any key to close.\n");
-    std::cin.get();
     return 0;
 }

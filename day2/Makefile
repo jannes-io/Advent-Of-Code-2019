@@ -1,3 +1,4 @@
+UTILS=
 SRC_DIR=./src
 OBJ_DIR=./.obj
 BUILD_DIR=./build
@@ -9,7 +10,7 @@ CC=gcc
 CFLAGS=-Wall -Wextra -pedantic
 
 CXX=g++
-CXXFLAGS=-Wall -Wextra -pedantic --std=c++17
+CXXFLAGS=-Wall -Wextra -pedantic --std=c++17 -I$(UTILS)
 
 LINK=-lstdc++
 
