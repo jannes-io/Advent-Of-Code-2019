@@ -1,17 +1,58 @@
 #include "util.hpp"
 #include <vector>
+#include <set>
+#include <map>
 #include <cmath>
+#include <algorithm>
+#include <numeric>
+#include <iterator>
 
 enum class Direction {
     UP = 'U',
-    RIGHT = 'R',
     DOWN = 'D',
+    RIGHT = 'R',
     LEFT = 'L'
 };
 
-typedef std::pair<int, int> Pos;
-typedef std::pair<Direction, int> Move;
-typedef std::vector<Pos> Path;
+struct Pos {
+    int x;
+    int y;
+
+    Pos operator+(const Pos &other) const 
+    {
+        return {this->x + other.x, this->y + other.y};
+    }
+
+    bool operator<(const Pos &other) const
+    {
+        if (this->x == other.x) {
+            return this->y < other.y;
+        }
+        return this->x < other.x;
+    }
+
+    void printPos() const
+    {
+        printf("%d, %d\n",this->x, this->y);
+    }
+
+    int distanceToOrigin() const
+    {
+        return int(abs(this->x) + abs(this->y));
+    }
+};
+
+struct Move {
+    Direction dir;
+    int distance;
+};
+
+typedef std::set<Pos> Path;
+
+struct WireData {
+    Path path;
+    std::map<Pos, int> costs;
+};
 
 std::vector<Move> parseInput(std::string input)
 {
@@ -20,46 +61,37 @@ std::vector<Move> parseInput(std::string input)
     for (const auto m : split(input, ","))
         result.push_back({ 
             Direction{m.substr(0, 1).c_str()[0]},
-            atoi(m.substr(1, m.length() - 1).c_str()) 
+            int(atol(m.substr(1, m.length() - 1).c_str()))
         });
     return result;
 }
 
-void printPos(const Pos &p)
+Pos walkPoints(const Pos &lastPos, const Move &m, WireData &wd, int &steps)
 {
-    printf("%d, %d\n", p.first, p.second);
-}
-
-Path walkPoints(const Pos &lastPos, const Move &m)
-{
-    Path result;
-    for (int i = 1; i <= m.second; i++) {
-        switch (m.first) {
-            case Direction::UP:
-                result.push_back({ lastPos.first, lastPos.second + i }); break;
-            case Direction::RIGHT:
-                result.push_back({ lastPos.first + i, lastPos.second }); break;
-            case Direction::DOWN:
-                result.push_back({ lastPos.first, lastPos.second - i }); break;
-            case Direction::LEFT:
-                result.push_back({ lastPos.first - i, lastPos.second }); break;
+    Pos p;
+    for (int i = 1; i <= m.distance; i++) {
+        steps++;
+        switch (m.dir) {
+            case Direction::UP:    p = { lastPos.x    , lastPos.y + i }; break;
+            case Direction::DOWN:  p = { lastPos.x    , lastPos.y - i }; break;
+            case Direction::RIGHT: p = { lastPos.x + i, lastPos.y     }; break;
+            case Direction::LEFT:  p = { lastPos.x - i, lastPos.y     }; break;
             default: break;
         }
+        wd.path.insert(p);
+        wd.costs.insert({ p, steps });
     }
-    return result;
+    return p;
 }
 
-Path getVisitedLocations(const std::vector<Move> &moves)
+WireData getVisitedLocations(const std::vector<Move> &moves)
 {
-    Path result = {{0, 0}};
-    Pos lastPos;
+    WireData result;
+    Pos lastPos = { 0, 0 };
+    int steps = 0;
 
     for (const auto &m : moves) {
-        lastPos = result.back();
-
-        for (const auto p : walkPoints(lastPos, m)) {
-            result.push_back(p);
-        }
+        lastPos = walkPoints(lastPos, m, result, steps);
     }
 
     return result;
@@ -67,21 +99,34 @@ Path getVisitedLocations(const std::vector<Move> &moves)
 
 int findClosestIntersection(const Path &w1, const Path &w2)
 {
-    auto smallest = INT_MAX;
-    for (const Pos &p1 : w1) {
-        for (const Pos &p2 : w2) {
-            if ((p1.first == 0 && p1.second == 0) || (p2.first == 0 && p2.second == 0))
-                continue;
+    Path intersections;
+    std::set_intersection(
+        w1.begin(), w1.end(),
+        w2.begin(), w2.end(),
+        std::inserter(intersections, intersections.begin()));
 
-            if (p1.first == p2.first && p1.second == p2.second) {
-                const auto d = abs(p1.first) + abs(p1.second);
-                if (d < smallest)
-                    smallest = d;
-            }
-        }
+    const auto smallest = std::min_element(intersections.begin(), intersections.end(), [](const Pos &a, const Pos &b){
+        return a.distanceToOrigin() < b.distanceToOrigin();
+    });
+
+    return intersections.extract(smallest).value().distanceToOrigin();
+}
+
+int findClosestStepCount(const WireData &w1, const WireData &w2)
+{
+    Path intersections;
+    std::set_intersection(
+        w1.path.begin(), w1.path.end(),
+        w2.path.begin(), w2.path.end(),
+        std::inserter(intersections, intersections.begin()));
+
+    int cheapest = std::numeric_limits<int>::max();
+    for (const auto i : intersections) {
+        const auto cost = w1.costs.at(i) + w2.costs.at(i);
+        if (cost < cheapest)
+            cheapest = cost;
     }
-
-    return smallest;
+    return cheapest;
 }
 
 int main (int argc, char* argv[])
@@ -93,14 +138,13 @@ int main (int argc, char* argv[])
     printf("Calculating Day 3!\n");
 
     const auto input = readFile(argv[1]);
-    const auto wire1 = parseInput(input[0]);
-    const auto wire2 = parseInput(input[1]);
-    const auto closest = findClosestIntersection(
-        getVisitedLocations(wire1),
-        getVisitedLocations(wire2)
-    );
+    const auto wire1 = getVisitedLocations(parseInput(input[0]));
+    const auto wire2 = getVisitedLocations(parseInput(input[1]));
+    const auto closest = findClosestIntersection(wire1.path, wire2.path);
+    const auto cheapest = findClosestStepCount(wire1, wire2);
     
     printf("Part 1: %d\n", closest);
+    printf("Part 2: %d\n", cheapest);
 
     return 0;
 }
