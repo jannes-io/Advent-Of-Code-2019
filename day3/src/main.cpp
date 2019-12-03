@@ -38,7 +38,7 @@ struct Pos {
 
     int distanceToOrigin() const
     {
-        return int(abs(this->x) + abs(this->y));
+        return abs(this->x) + abs(this->y);
     }
 };
 
@@ -90,38 +90,28 @@ WireData getVisitedLocations(const std::vector<Move> &moves)
     Pos lastPos = { 0, 0 };
     int steps = 0;
 
-    for (const auto &m : moves) {
+    for (const auto &m : moves)
         lastPos = walkPoints(lastPos, m, result, steps);
-    }
 
     return result;
 }
 
-int findClosestIntersection(const Path &w1, const Path &w2)
+int findClosestIntersection(const Path &intersections)
 {
-    Path intersections;
-    std::set_intersection(
-        w1.begin(), w1.end(),
-        w2.begin(), w2.end(),
-        std::inserter(intersections, intersections.begin()));
+    int closest = std::numeric_limits<int>::max();
+    for (const auto &i : intersections) {
+        const auto distance = i.distanceToOrigin();
+        if (distance < closest)
+            closest = distance;
+    }
 
-    const auto smallest = std::min_element(intersections.begin(), intersections.end(), [](const Pos &a, const Pos &b){
-        return a.distanceToOrigin() < b.distanceToOrigin();
-    });
-
-    return intersections.extract(smallest).value().distanceToOrigin();
+    return closest;
 }
 
-int findClosestStepCount(const WireData &w1, const WireData &w2)
+int findClosestStepCount(const Path &intersections, const WireData &w1, const WireData &w2)
 {
-    Path intersections;
-    std::set_intersection(
-        w1.path.begin(), w1.path.end(),
-        w2.path.begin(), w2.path.end(),
-        std::inserter(intersections, intersections.begin()));
-
     int cheapest = std::numeric_limits<int>::max();
-    for (const auto i : intersections) {
+    for (const auto &i : intersections) {
         const auto cost = w1.costs.at(i) + w2.costs.at(i);
         if (cost < cheapest)
             cheapest = cost;
@@ -140,8 +130,15 @@ int main (int argc, char* argv[])
     const auto input = readFile(argv[1]);
     const auto wire1 = getVisitedLocations(parseInput(input[0]));
     const auto wire2 = getVisitedLocations(parseInput(input[1]));
-    const auto closest = findClosestIntersection(wire1.path, wire2.path);
-    const auto cheapest = findClosestStepCount(wire1, wire2);
+
+    Path intersections;
+    std::set_intersection(
+        wire1.path.begin(), wire1.path.end(),
+        wire2.path.begin(), wire2.path.end(),
+        std::inserter(intersections, intersections.begin()));
+
+    const auto closest = findClosestIntersection(intersections);
+    const auto cheapest = findClosestStepCount(intersections, wire1, wire2);
     
     printf("Part 1: %d\n", closest);
     printf("Part 2: %d\n", cheapest);
