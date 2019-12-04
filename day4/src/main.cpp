@@ -1,21 +1,49 @@
 #include "util.hpp"
-#include <vector>
 #include <algorithm>
+#include <unordered_map>
 
-bool isOrdered(uint32_t start)
+bool isOrdered(uint32_t n)
 {
     uint8_t d = UINT8_MAX;
-    while (start > 0)
+    while (n > 0)
     {
-        uint8_t digit = start % 10;
-        if (digit > d)
-            return false;
-
-        start /= 10;
+        uint8_t digit = n % 10;
+        if (digit > d) return false;
+        n /= 10;
         d = digit;
     }
 
     return true;
+}
+
+bool hasDouble(uint32_t n)
+{
+    uint8_t d = UINT8_MAX;
+    while (n > 0)
+    {
+        uint8_t digit = n % 10;
+        if (digit == d) return true;
+        n /= 10;
+        d = digit;
+    }
+    return false;
+}
+
+bool hasDoubleGroup(uint32_t n)
+{
+    uint8_t ns[10] = {};
+    while (n > 0)
+    {
+        uint8_t digit = n % 10;
+        n /= 10;
+        ns[digit]++;
+    }
+
+    for (const auto &count : ns) {
+        if (count == 2)
+            return true;
+    }
+    return false;
 }
 
 struct Bounds {
@@ -24,33 +52,10 @@ struct Bounds {
     Bounds(const std::string &str)
     {
         const auto parts = split(str, "-");
-        auto lowest = atoi(parts[0].c_str());
-        auto highest = atoi(parts[1].c_str());
-        while (!isOrdered(lowest))
-            lowest++;
-        while (!isOrdered(highest))
-            highest--;
-        this->lower = lowest;
-        this->upper = highest;
-    }
-
-    void print()
-    {
-        printf("Lower bound: %d\n", this->lower);
-        printf("Upper bound: %d\n", this->upper);
+        this->lower = atoi(parts[0].c_str());
+        this->upper = atoi(parts[1].c_str());
     }
 };
-
-int passwordCount(const Bounds &bounds)
-{
-    uint32_t count = 0;
-    for (uint32_t n = bounds.lower; n <= bounds.upper; n++) {
-        if (!isOrdered(n))
-            continue;
-        count++;
-    }
-    return count;
-}
 
 int main (int argc, char* argv[])
 {
@@ -61,10 +66,18 @@ int main (int argc, char* argv[])
     printf("Calculating Day 4!\n");
 
     const auto file = readFile(argv[1]);
-    Bounds input = Bounds(file[0]);
-
-    const auto count = passwordCount(input);
-    printf("Part 1: %d\n", count);
+    Bounds bounds = Bounds(file[0]);
+    
+    uint32_t count1 = 0;
+    uint32_t count2 = 0;
+    for (uint32_t n = bounds.lower; n <= bounds.upper; n++) {
+        if (!isOrdered(n)) continue;
+        if (!hasDouble(n)) continue;
+        count1++;
+        if (hasDoubleGroup(n)) count2++;
+    }
+    printf("Part 1: %d\n", count1);
+    printf("Part 2: %d\n", count2);
 
     return 0;
 }
