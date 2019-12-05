@@ -23,9 +23,15 @@ ifeq ($(OS), Windows_NT)
 define mkdir =
   	if not exist "$(1)" mkdir "$(1)"
 endef
+define rmdir =
+	if exist "$(1)" del /S/Q "$(1)"
+endef
 else
 define mkdir
 	mkdir -p $(1)
+endef
+define rmdir =
+	rm -rf $(1)
 endef
 endif
 
@@ -40,3 +46,6 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@$(call mkdir,$(OBJ_DIR))
 	$(CXX) -o $@ -c $< $(CXXFLAGS)
+
+clean:
+	@$(call rmdir,$(OBJ_DIR))

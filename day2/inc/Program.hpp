@@ -27,15 +27,15 @@ struct Opcode {
 struct Program {
     std::vector<int> initial;
     std::vector<int> state;
+    int input;
 
-    Program(const std::vector<int> &p);
+    Program(const std::vector<int> &p)
+        : initial(p), state(p) {}
 
     int run();
-    int* getArgs(const Opcode &opcode, size_t pointer, size_t argc);
+    int getArg(const Opcode &opcode, size_t pointer, size_t argc);
     void reset();
 };
-
-Program::Program(const std::vector<int> &p) : initial(p), state(p) {}
 
 int Program::run()
 {
@@ -45,23 +45,27 @@ int Program::run()
     while (p[i] != 99)
     {
         const auto oc = Opcode(p[i]);
-        switch (p[i]) {
-            case 1: *getArgs(oc, i, 3) = *getArgs(oc, i, 1) + *getArgs(oc, i, 2); i += 4; break;
-            case 2: *getArgs(oc, i, 3) = *getArgs(oc, i, 1) * *getArgs(oc, i, 2); i += 4; break;
-            case 3: *getArgs(oc, i, 1) = *getArgs(oc, i, 2)                     ; i += 3; break;
-            case 4: return *getArgs(oc, i, 1); break;
-            default: break;
+        switch (oc.instruction) {
+            case 1: p[p[i + 3]] = getArg(oc, i, 1) + getArg(oc, i, 2)         ; i += 4; break; // Add
+            case 2: p[p[i + 3]] = getArg(oc, i, 1) * getArg(oc, i, 2)         ; i += 4; break; // Mul
+            case 3: p[p[i + 1]] = this->input                                 ; i += 2; break; // In
+            case 4: printf("%d\n", getArg(oc, i, 1))                          ; i += 2; break; // Out
+            case 5: if (getArg(oc, i, 1) != 0) i = getArg(oc, i, 2); else       i += 3; break; // Jit
+            case 6: if (getArg(oc, i, 1) == 0) i = getArg(oc, i, 2); else       i += 3; break; // Jif
+            case 7: p[p[i + 3]] = getArg(oc, i, 1) < getArg(oc, i, 2) ? 1 : 0 ; i += 4; break; // <
+            case 8: p[p[i + 3]] = getArg(oc, i, 1) == getArg(oc, i, 2) ? 1 : 0; i += 4; break; // eq
+            default: printf("Invalid opcode! %d\n", p[i]);exit(1)                     ; break; // ERR
         }
     }
     return p[0];
 }
 
-int* Program::getArgs(const Opcode &opcode, size_t pointer, size_t argc)
+int Program::getArg(const Opcode &opcode, size_t pointer, size_t argc)
 {
     auto &p = this->state;
     return opcode.modes[argc - 1] == 0
-        ? &p[p[pointer + argc]]
-        : &p[pointer + argc];
+        ? p[p[pointer + argc]]
+        : p[pointer + argc];
 }
 
 void Program::reset()

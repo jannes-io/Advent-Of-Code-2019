@@ -11,3 +11,6 @@ all:
 	@echo Building Day $(DAY)!
 	@$(MAKE) -s -C ./day$(DAY) UTILS=../$(UTILS_DIR)
 	@./day$(DAY)/build/$(OUT) ./day$(DAY)/input/input.txt
+
+clean:
+	@$(MAKE) -s -C ./day$(DAY) clean
