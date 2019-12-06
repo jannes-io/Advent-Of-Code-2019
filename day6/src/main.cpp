@@ -1,4 +1,5 @@
 #include "util.hpp"
+#include <algorithm>
 #include <unordered_map>
 
 typedef std::unordered_map<std::string, std::vector<std::string>> Map;
@@ -30,6 +31,38 @@ uint32_t countLinks(const Map &map, const std::string &id)
     return c;
 }
 
+std::string findParent(const Map &map, const std::string &id)
+{
+    for (const auto &m : map)
+        for (const auto &l : m.second)
+            if (l == id)
+                return m.first;
+    return "COM";
+}
+
+uint32_t distance(const Map &map, const std::string &firstId, const std::string &secondId)
+{
+    std::vector<std::string> visited1 = { firstId };
+    std::vector<std::string> visited2 = { secondId };
+    while (visited1.back() != "COM") {
+        const auto parent = findParent(map, visited1.back());
+        visited1.push_back(parent);
+    }
+
+    while (visited2.back() != "COM") {
+        const auto parent = findParent(map, visited2.back());
+        for (size_t i = 0; i < visited1.size(); i++) {
+            if (parent == visited1[i]) {
+                return i + visited2.size() - 2;
+            }
+        }
+
+        visited2.push_back(parent);
+    }
+
+    return 0;
+}
+
 int main (int argc, char* argv[])
 {
     if (argc < 2) {
@@ -46,8 +79,10 @@ int main (int argc, char* argv[])
         c += countLinks(map, p.first);
     }
 
+    const auto d = distance(map, std::string("YOU"), std::string("SAN"));
+
     printf("Part 1: %d\n", c);
-    printf("Part 1: %d\n", 0);
+    printf("Part 1: %d\n", d);
 
     return 0;
 }
