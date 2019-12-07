@@ -10,7 +10,7 @@ CC=gcc
 CFLAGS=-Wall -Wextra -pedantic
 
 CXX=g++
-CXXFLAGS=-Wall -Wextra -pedantic --std=c++17 -I$(UTILS)
+CXXFLAGS=-Wall -Wextra -pedantic --std=c++17 -I$(UTILS) -I../day2/inc -O3
 
 LINK=-lstdc++
 

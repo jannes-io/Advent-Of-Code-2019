@@ -17,17 +17,14 @@ int main(int argc, char* argv[])
 
     auto program = Program(instructions);
 
-    printf("Part 1:\n");
-    program.input = 1;
     program.run();
-    printf("----------\n");
+    program.input(1);
+    printf("Part 1: %d\n", program.output.back());
     
     program.reset();
-
-    printf("Part 2:\n");
-    program.input = 5;
     program.run();
-    printf("----------\n");
+    program.input(5);
+    printf("Part 2: %d\n", program.output.back());
 
     return 0;
 }

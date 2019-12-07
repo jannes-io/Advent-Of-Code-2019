@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <iostream>
 
 struct Opcode {
     int instruction;
@@ -27,29 +28,37 @@ struct Opcode {
 struct Program {
     std::vector<int> initial;
     std::vector<int> state;
-    int input;
+    std::vector<int> output;
+    size_t i;
+    bool done;
 
     Program(const std::vector<int> &p)
-        : initial(p), state(p) {}
+        : initial(p), state(p), i(0), done(false) {}
+    Program(const Program &p)
+        : initial(p.initial), state(p.state), i(p.i), done(p.done) {}
 
-    int run();
+    void run();
+    void input(int val);
     int getArg(const Opcode &opcode, size_t pointer, size_t argc);
     void reset();
 };
 
-int Program::run()
+void Program::run()
 {
     auto &p = this->state;
-    size_t i = 0;
-
-    while (p[i] != 99)
+    while (!this->done)
     {
         const auto oc = Opcode(p[i]);
+        if (oc.instruction == 99) {
+            this->done = true;
+            return;
+        }
+
         switch (oc.instruction) {
             case 1: p[p[i + 3]] = getArg(oc, i, 1) + getArg(oc, i, 2)         ; i += 4; break; // Add
             case 2: p[p[i + 3]] = getArg(oc, i, 1) * getArg(oc, i, 2)         ; i += 4; break; // Mul
-            case 3: p[p[i + 1]] = this->input                                 ; i += 2; break; // In
-            case 4: printf("%d\n", getArg(oc, i, 1))                          ; i += 2; break; // Out
+            case 3: return;
+            case 4: this->output.push_back(getArg(oc, i, 1))                  ; i += 2; break; // Out
             case 5: if (getArg(oc, i, 1) != 0) i = getArg(oc, i, 2); else       i += 3; break; // Jit
             case 6: if (getArg(oc, i, 1) == 0) i = getArg(oc, i, 2); else       i += 3; break; // Jif
             case 7: p[p[i + 3]] = getArg(oc, i, 1) < getArg(oc, i, 2) ? 1 : 0 ; i += 4; break; // <
@@ -57,7 +66,14 @@ int Program::run()
             default: printf("Invalid opcode! %d\n", p[i]);exit(1)                     ; break; // ERR
         }
     }
-    return p[0];
+}
+
+void Program::input(int val)
+{
+    auto &p = this->state;
+    p[p[i + 1]] = val;
+    this->i += 2;
+    this->run();
 }
 
 int Program::getArg(const Opcode &opcode, size_t pointer, size_t argc)
@@ -71,4 +87,7 @@ int Program::getArg(const Opcode &opcode, size_t pointer, size_t argc)
 void Program::reset()
 {
     this->state = this->initial;
+    this->i = 0; 
+    this->done = false;
+    this->output.clear();
 }
