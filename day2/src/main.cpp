@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 #include "util.hpp"
-#include "../inc/Program.hpp"
+#include "Program.hpp"
 
 int runUntilFound(Program &program, int desiredOutput)
 {
@@ -11,7 +11,8 @@ int runUntilFound(Program &program, int desiredOutput)
             program.state[1] = noun;
             program.state[2] = verb;
 
-            auto output = program.run();
+            program.run();
+            auto output = program.state[0];
             if (output == desiredOutput) {
                 return 100 * program.state[1] + program.state[2];
             }
@@ -24,7 +25,8 @@ void runPartOne(Program program)
 {
     program.state[1] = 12;
     program.state[2] = 2;
-    printf("Part 1: %d\n", program.run());
+    program.run();
+    printf("Part 1: %d\n", program.state[0]);
 }
 
 void runPartTwo(Program program)

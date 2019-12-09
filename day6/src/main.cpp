@@ -69,7 +69,7 @@ int main (int argc, char* argv[])
         printf("Input file required\n");
         return 1;
     }
-    printf("Calculating Day 5\n");
+    printf("Calculating Day 6\n");
 
     const auto input = readFile(argv[1]);
     const auto map = createLinks(input);

@@ -1,4 +1,3 @@
-UTILS=
 SRC_DIR=./src
 OBJ_DIR=./.obj
 BUILD_DIR=./build
@@ -10,7 +9,7 @@ CC=gcc
 CFLAGS=-Wall -Wextra -pedantic
 
 CXX=g++
-CXXFLAGS=-Wall -Wextra -pedantic --std=c++17 -I$(UTILS) -O3
+CXXFLAGS=-Wall -Wextra -pedantic --std=c++17 -I../inc
 
 LINK=-lstdc++
 
@@ -23,9 +22,15 @@ ifeq ($(OS), Windows_NT)
 define mkdir =
   	if not exist "$(1)" mkdir "$(1)"
 endef
+define rmdir =
+	if exist "$(1)" del /S/Q "$(1)"
+endef
 else
 define mkdir
 	mkdir -p $(1)
+endef
+define rmdir =
+	rm -rf $(1)
 endef
 endif
 
@@ -40,3 +45,6 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@$(call mkdir,$(OBJ_DIR))
 	$(CXX) -o $@ -c $< $(CXXFLAGS)
+
+clean:
+	@$(call rmdir,$(OBJ_DIR))
