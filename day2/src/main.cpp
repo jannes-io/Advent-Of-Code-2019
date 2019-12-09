@@ -1,9 +1,9 @@
-#include <iostream>
-#include <vector>
 #include "util.hpp"
 #include "Program.hpp"
+#include <iostream>
+#include <vector>
 
-int runUntilFound(Program &program, int desiredOutput)
+int64_t runUntilFound(Program &program, int desiredOutput)
 {
     for (size_t noun = 0; noun < 100; noun++) {
         for (size_t verb = 0; verb < 100; verb++) {
@@ -26,13 +26,13 @@ void runPartOne(Program program)
     program.state[1] = 12;
     program.state[2] = 2;
     program.run();
-    printf("Part 1: %d\n", program.state[0]);
+    std::cout << "Part 1: " << program.state[0] << std::endl;
 }
 
 void runPartTwo(Program program)
 {
     const auto output = runUntilFound(program, 19690720);
-    printf("Part 2: %d\n", output);
+    std::cout << "Part 2: " << output << std::endl;
 }
 
 int main(int argc, char* argv[])
@@ -44,9 +44,9 @@ int main(int argc, char* argv[])
     printf("Calculating Day 2!\n");
 
     const auto file = readFile(argv[1]);
-    std::vector<int> instructions;
+    std::vector<int64_t> instructions;
     for (const auto &el : split(file.front(), ","))
-        instructions.push_back(atoi(el.c_str()));
+        instructions.push_back(atoll(el.c_str()));
 
     auto program = Program(instructions);
 

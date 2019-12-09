@@ -15,13 +15,15 @@ int main(int argc, char* argv[])
         instructions.push_back(atoll(el.c_str()));
 
     auto program = Program(instructions);
-    //for (const auto &out : program.state)
-    //    printf("%lld,", out);
 
     program.run();
     program.input(1);
-    for (const auto &out : program.output)
-        printf("%lld,", out);
+    std::cout << "Part 1: " << program.output.back() << std::endl;
+    
+    program.reset();
+    program.run();
+    program.input(2);
+    std::cout << "Part 2: " << program.output.back() << std::endl;
 
     return 0;
 }

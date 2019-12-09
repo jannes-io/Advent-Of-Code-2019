@@ -10,21 +10,21 @@ int main(int argc, char* argv[])
     printf("Calculating Day 5\n");
 
     const auto file = readFile(argv[1]);
-    std::vector<int> instructions;
+    std::vector<int64_t> instructions;
     for (const auto &el : split(file.front(), ","))
-        instructions.push_back(atoi(el.c_str()));
+        instructions.push_back(atoll(el.c_str()));
 
 
     auto program = Program(instructions);
 
     program.run();
     program.input(1);
-    printf("Part 1: %d\n", program.output.back());
+    std::cout << "Part 1: " << program.output.back() << std::endl;
     
     program.reset();
     program.run();
     program.input(5);
-    printf("Part 2: %d\n", program.output.back());
+    std::cout << "Part 2: " << program.output.back() << std::endl;
 
     return 0;
 }

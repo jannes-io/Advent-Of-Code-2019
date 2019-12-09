@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <stdint.h>
+#include <inttypes.h>
 
 std::vector<std::string> split(std::string s, const std::string &delim)
 {
